@@ -54,7 +54,14 @@ export default function Prenota() {
     setSubmitting(false)
 
     if (result.error) {
-      setError('Si è verificato un errore. Riprova o chiamaci direttamente.')
+      setError(result.error)
+      if (res.status === 409) {
+        // Ricarica gli orari disponibili aggiornati, così sparisce lo slot appena occupato
+        setSelectedSlot('')
+        fetch(`/api/available-slots?date=${date}&serviceId=${serviceId}`)
+          .then((r) => r.json())
+          .then((data) => setSlots(data.slots || []))
+      }
       return
     }
 

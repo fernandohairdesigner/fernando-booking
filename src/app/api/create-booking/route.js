@@ -18,19 +18,47 @@ export async function POST(request) {
     .eq('id', serviceId)
     .single()
 
-  const [h, m] = startTime.split(':').map(Number)
+ const [h, m] = startTime.split(':').map(Number)
   const endMinutes = h * 60 + m + service.duration_minutes
   const endTime = `${String(Math.floor(endMinutes / 60)).padStart(2, '0')}:${String(endMinutes % 60).padStart(2, '0')}`
 
-  const { error } = await supabase.from('bookings').insert({
-    service_id: serviceId,
-    booking_date: date,
-    start_time: startTime,
-    end_time: endTime,
-    customer_name: name,
-    customer_phone: phone,
-    customer_email: email || null,
+  // Controllo anti-doppia-prenotazione: verifica che nessuno abbia preso questo slot nel frattempo
+  const { data: conflicting } = await supabase
+    .from('bookings')
+    .select('id, start_time, end_time')
+    .eq('booking_date', date)
+    .neq('status', 'annullata')
+
+  const hasConflict = conflicting?.some((b) => {
+    const [bsH, bsM] = b.start_time.split(':').map(Number)
+    const [beH, beM] = b.end_time.split(':').map(Number)
+    const bStart = bsH * 60 + bsM
+    const bEnd = beH * 60 + beM
+    const newStart = h * 60 + m
+    const newEnd = endMinutes
+    return newStart < bEnd && newEnd > bStart
   })
+
+  if (hasConflict) {
+    return NextResponse.json(
+      { error: 'Questo orario è appena stato prenotato da qualcun altro. Scegline un altro.' },
+      { status: 409 }
+    )
+  }
+
+  const { data: newBooking, error } = await supabase
+    .from('bookings')
+    .insert({
+      service_id: serviceId,
+      booking_date: date,
+      start_time: startTime,
+      end_time: endTime,
+      customer_name: name,
+      customer_phone: phone,
+      customer_email: email || null,
+    })
+    .select()
+    .single()
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 })
@@ -60,6 +88,11 @@ export async function POST(request) {
               <li><strong>Ora:</strong> ${startTime}</li>
             </ul>
             <p>Ti aspettiamo da Fernando Hair Designer!</p>
+            <p style="margin-top: 24px;">
+              <a href="${process.env.NEXT_PUBLIC_SITE_URL}/annulla/${newBooking.cancel_token}" style="color: #666;">
+                Vuoi disdire? Clicca qui
+              </a>
+            </p>
           </div>
         `,
       })
