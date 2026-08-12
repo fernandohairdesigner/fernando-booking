@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabaseClient'
+import CustomSelect from '@/components/CustomSelect'
+import CustomDatePicker from '@/components/CustomDatePicker'
 
 export default function Prenota() {
   const [services, setServices] = useState([])
@@ -72,6 +74,11 @@ export default function Prenota() {
   const inputClasses =
     'w-full bg-transparent border-b border-avorio/20 focus:border-bronzo px-1 py-3 text-avorio placeholder:text-avorio/45 focus:outline-none transition-colors font-body'
 
+  const serviceOptions = services.map((s) => ({
+    value: s.id,
+    label: `${s.name} — €${s.price} (${s.duration_minutes} min)`,
+  }))
+
   if (done) {
     return (
       <main className="min-h-screen bg-espresso text-avorio flex items-center justify-center px-6 pt-20">
@@ -107,33 +114,19 @@ export default function Prenota() {
             <label className="block font-body text-xs uppercase tracking-[0.2em] text-avorio/60 mb-3">
               Servizio
             </label>
-            <select
+            <CustomSelect
+              options={serviceOptions}
               value={serviceId}
-              onChange={(e) => setServiceId(e.target.value)}
-              required
-              className={`${inputClasses} appearance-none cursor-pointer`}
-            >
-              <option value="" className="bg-espresso">Seleziona un servizio</option>
-              {services.map((s) => (
-                <option key={s.id} value={s.id} className="bg-espresso">
-                  {s.name} — €{s.price} ({s.duration_minutes} min)
-                </option>
-              ))}
-            </select>
+              onChange={setServiceId}
+              placeholder="Seleziona un servizio"
+            />
           </div>
 
           <div>
             <label className="block font-body text-xs uppercase tracking-[0.2em] text-avorio/60 mb-3">
               Data
             </label>
-            <input
-              type="date"
-              min={today}
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-              required
-              className={`${inputClasses} scheme-dark`}
-            />
+            <CustomDatePicker value={date} onChange={setDate} min={today} />
           </div>
 
           {date && serviceId && (
