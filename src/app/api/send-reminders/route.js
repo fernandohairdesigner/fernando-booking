@@ -1,11 +1,10 @@
-import { supabase } from '@/lib/supabaseClient'
+import { supabaseAdmin } from '@/lib/supabaseAdmin'
 import { NextResponse } from 'next/server'
 import { Resend } from 'resend'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 
 export async function GET(request) {
-  // Protezione: solo Vercel (con il segreto giusto) può chiamare questa API
   const authHeader = request.headers.get('authorization')
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
     return NextResponse.json({ error: 'Non autorizzato' }, { status: 401 })
@@ -15,7 +14,7 @@ export async function GET(request) {
   tomorrow.setDate(tomorrow.getDate() + 1)
   const tomorrowDate = tomorrow.toISOString().split('T')[0]
 
-  const { data: bookings } = await supabase
+  const { data: bookings } = await supabaseAdmin
     .from('bookings')
     .select('*, services(name)')
     .eq('booking_date', tomorrowDate)
@@ -49,7 +48,7 @@ export async function GET(request) {
           </div>
         `,
       })
-      await supabase.from('bookings').update({ reminder_sent: true }).eq('id', b.id)
+      await supabaseAdmin.from('bookings').update({ reminder_sent: true }).eq('id', b.id)
       sentCount++
     } catch (e) {
       console.error(`Errore invio promemoria a ${b.customer_email}:`, e)

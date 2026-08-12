@@ -56,7 +56,6 @@ export default function Prenota() {
     if (result.error) {
       setError(result.error)
       if (res.status === 409) {
-        // Ricarica gli orari disponibili aggiornati, così sparisce lo slot appena occupato
         setSelectedSlot('')
         fetch(`/api/available-slots?date=${date}&serviceId=${serviceId}`)
           .then((r) => r.json())
@@ -70,13 +69,23 @@ export default function Prenota() {
 
   const today = new Date().toISOString().split('T')[0]
 
+  const inputClasses =
+    'w-full bg-transparent border-b border-avorio/20 focus:border-bronzo px-1 py-3 text-avorio placeholder:text-avorio/45 focus:outline-none transition-colors font-body'
+
   if (done) {
     return (
-      <main className="min-h-screen bg-neutral-50 flex items-center justify-center px-6">
-        <div className="max-w-md text-center bg-white rounded-2xl p-10 shadow-sm border border-neutral-100">
-          <h1 className="text-2xl font-semibold text-neutral-900">Prenotazione confermata!</h1>
-          <p className="text-neutral-500 mt-3">
-            Ti aspettiamo il {date} alle {selectedSlot}. A presto!
+      <main className="min-h-screen bg-espresso text-avorio flex items-center justify-center px-6 pt-20">
+        <div className="max-w-md text-center">
+          <p className="font-body uppercase tracking-[0.3em] text-bronzo text-xs mb-6">
+            Prenotazione confermata
+          </p>
+          <h1 className="font-display italic text-4xl md:text-5xl mb-6">
+            A prestissimo!
+          </h1>
+          <p className="text-avorio/70 font-body leading-relaxed">
+            Ti aspettiamo il {new Date(date + 'T12:00:00').toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long' })} alle {selectedSlot}.
+            <br />
+            Ti abbiamo mandato una email di conferma.
           </p>
         </div>
       </main>
@@ -84,22 +93,29 @@ export default function Prenota() {
   }
 
   return (
-    <main className="min-h-screen bg-neutral-50 px-6 py-16">
-      <div className="max-w-lg mx-auto bg-white rounded-2xl p-8 shadow-sm border border-neutral-100">
-        <h1 className="text-2xl font-semibold text-neutral-900 mb-8">Prenota il tuo appuntamento</h1>
+    <main className="min-h-screen bg-espresso text-avorio px-6 pt-32 pb-24">
+      <div className="max-w-lg mx-auto">
+        <p className="font-body uppercase tracking-[0.3em] text-bronzo text-xs mb-4 text-center">
+          Prenota
+        </p>
+        <h1 className="font-display italic text-4xl md:text-5xl mb-12 text-center">
+          Il tuo appuntamento
+        </h1>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-8">
           <div>
-            <label className="block text-sm font-medium text-neutral-700 mb-2">Servizio</label>
+            <label className="block font-body text-xs uppercase tracking-[0.2em] text-avorio/60 mb-3">
+              Servizio
+            </label>
             <select
               value={serviceId}
               onChange={(e) => setServiceId(e.target.value)}
               required
-              className="w-full border border-neutral-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-neutral-900"
+              className={`${inputClasses} appearance-none cursor-pointer`}
             >
-              <option value="">Seleziona un servizio</option>
+              <option value="" className="bg-espresso">Seleziona un servizio</option>
               {services.map((s) => (
-                <option key={s.id} value={s.id}>
+                <option key={s.id} value={s.id} className="bg-espresso">
                   {s.name} — €{s.price} ({s.duration_minutes} min)
                 </option>
               ))}
@@ -107,23 +123,31 @@ export default function Prenota() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-neutral-700 mb-2">Data</label>
+            <label className="block font-body text-xs uppercase tracking-[0.2em] text-avorio/60 mb-3">
+              Data
+            </label>
             <input
               type="date"
               min={today}
               value={date}
               onChange={(e) => setDate(e.target.value)}
               required
-              className="w-full border border-neutral-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-neutral-900"
+              className={`${inputClasses} scheme-dark`}
             />
           </div>
 
           {date && serviceId && (
             <div>
-              <label className="block text-sm font-medium text-neutral-700 mb-2">Orario</label>
-              {loadingSlots && <p className="text-neutral-400 text-sm">Carico gli orari disponibili...</p>}
+              <label className="block font-body text-xs uppercase tracking-[0.2em] text-avorio/60 mb-3">
+                Orario
+              </label>
+              {loadingSlots && (
+                <p className="text-avorio/45 text-sm font-body">Carico gli orari disponibili...</p>
+              )}
               {!loadingSlots && slots.length === 0 && (
-                <p className="text-neutral-400 text-sm">Nessun orario disponibile in questo giorno.</p>
+                <p className="text-avorio/45 text-sm font-body">
+                  Nessun orario disponibile in questo giorno.
+                </p>
               )}
               <div className="grid grid-cols-4 gap-2">
                 {slots.map((slot) => (
@@ -131,10 +155,10 @@ export default function Prenota() {
                     type="button"
                     key={slot}
                     onClick={() => setSelectedSlot(slot)}
-                    className={`py-2 rounded-lg text-sm border transition ${
+                    className={`py-2.5 rounded-full text-sm font-body border transition-colors duration-300 ${
                       selectedSlot === slot
-                        ? 'bg-neutral-900 text-white border-neutral-900'
-                        : 'border-neutral-200 text-neutral-700 hover:border-neutral-400'
+                        ? 'bg-bronzo text-espresso border-bronzo font-semibold'
+                        : 'border-avorio/20 text-avorio/75 hover:border-bronzo-light'
                     }`}
                   >
                     {slot}
@@ -145,47 +169,56 @@ export default function Prenota() {
           )}
 
           {selectedSlot && (
-            <>
+            <div className="space-y-8 pt-4 border-t border-avorio/10">
               <div>
-                <label className="block text-sm font-medium text-neutral-700 mb-2">Nome e cognome</label>
+                <label className="block font-body text-xs uppercase tracking-[0.2em] text-avorio/60 mb-3">
+                  Nome e cognome
+                </label>
                 <input
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   required
-                  className="w-full border border-neutral-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-neutral-900"
+                  className={inputClasses}
+                  placeholder="Il tuo nome"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-neutral-700 mb-2">Telefono</label>
+                <label className="block font-body text-xs uppercase tracking-[0.2em] text-avorio/60 mb-3">
+                  Telefono
+                </label>
                 <input
                   type="tel"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                   required
-                  className="w-full border border-neutral-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-neutral-900"
+                  className={inputClasses}
+                  placeholder="Il tuo numero"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-neutral-700 mb-2">Email (facoltativa)</label>
+                <label className="block font-body text-xs uppercase tracking-[0.2em] text-avorio/60 mb-3">
+                  Email (facoltativa)
+                </label>
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full border border-neutral-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-neutral-900"
+                  className={inputClasses}
+                  placeholder="La tua email"
                 />
               </div>
 
-              {error && <p className="text-red-500 text-sm">{error}</p>}
+              {error && <p className="text-terracotta text-sm font-body">{error}</p>}
 
               <button
                 type="submit"
                 disabled={submitting}
-                className="w-full bg-neutral-900 text-white py-3 rounded-xl font-medium hover:bg-neutral-800 transition disabled:opacity-50"
+                className="w-full bg-bronzo hover:bg-bronzo-light text-espresso py-4 rounded-full font-body font-semibold tracking-wide transition-colors duration-300 disabled:opacity-40"
               >
                 {submitting ? 'Invio in corso...' : 'Conferma prenotazione'}
               </button>
-            </>
+            </div>
           )}
         </form>
       </div>

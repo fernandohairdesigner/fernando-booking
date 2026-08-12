@@ -1,4 +1,4 @@
-import { supabase } from '@/lib/supabaseClient'
+import { supabaseAdmin } from '@/lib/supabaseAdmin'
 import { NextResponse } from 'next/server'
 
 export async function GET(request) {
@@ -10,7 +10,7 @@ export async function GET(request) {
     return NextResponse.json({ error: 'Parametri mancanti' }, { status: 400 })
   }
 
-  const { data: service } = await supabase
+  const { data: service } = await supabaseAdmin
     .from('services')
     .select('duration_minutes')
     .eq('id', serviceId)
@@ -18,7 +18,7 @@ export async function GET(request) {
 
   const dayOfWeek = new Date(date + 'T12:00:00').getDay()
 
-  const { data: hours } = await supabase
+  const { data: hours } = await supabaseAdmin
     .from('business_hours')
     .select('*')
     .eq('day_of_week', dayOfWeek)
@@ -28,7 +28,7 @@ export async function GET(request) {
     return NextResponse.json({ slots: [] })
   }
 
-  const { data: existingBookings } = await supabase
+  const { data: existingBookings } = await supabaseAdmin
     .from('bookings')
     .select('start_time, end_time')
     .eq('booking_date', date)
@@ -60,7 +60,7 @@ export async function GET(request) {
       slots.push(`${h}:${m}`)
     }
 
-    current += 30 // proponiamo uno slot ogni 30 minuti
+    current += 30
   }
 
   return NextResponse.json({ slots })

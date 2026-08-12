@@ -1,4 +1,4 @@
-import { supabase } from '@/lib/supabaseClient'
+import { supabaseAdmin } from '@/lib/supabaseAdmin'
 import { NextResponse } from 'next/server'
 import { Resend } from 'resend'
 
@@ -12,18 +12,17 @@ export async function POST(request) {
     return NextResponse.json({ error: 'Dati mancanti' }, { status: 400 })
   }
 
-  const { data: service } = await supabase
+  const { data: service } = await supabaseAdmin
     .from('services')
     .select('name, duration_minutes')
     .eq('id', serviceId)
     .single()
 
- const [h, m] = startTime.split(':').map(Number)
+  const [h, m] = startTime.split(':').map(Number)
   const endMinutes = h * 60 + m + service.duration_minutes
   const endTime = `${String(Math.floor(endMinutes / 60)).padStart(2, '0')}:${String(endMinutes % 60).padStart(2, '0')}`
 
-  // Controllo anti-doppia-prenotazione: verifica che nessuno abbia preso questo slot nel frattempo
-  const { data: conflicting } = await supabase
+  const { data: conflicting } = await supabaseAdmin
     .from('bookings')
     .select('id, start_time, end_time')
     .eq('booking_date', date)
@@ -46,7 +45,7 @@ export async function POST(request) {
     )
   }
 
-  const { data: newBooking, error } = await supabase
+  const { data: newBooking, error } = await supabaseAdmin
     .from('bookings')
     .insert({
       service_id: serviceId,
@@ -70,7 +69,6 @@ export async function POST(request) {
     month: 'long',
   })
 
-  // Email al cliente (solo se ha inserito l'email)
   if (email) {
     try {
       await resend.emails.send({
@@ -101,11 +99,10 @@ export async function POST(request) {
     }
   }
 
-  // Notifica al salone (sostituisci con la vera email del salone quando la sai)
   try {
     await resend.emails.send({
       from: 'Prenotazioni Sito <onboarding@resend.dev>',
-      to: 'info.riccardodeblasi@gmail.com',
+      to: 'INSERISCI_EMAIL_DEL_SALONE@example.com',
       subject: `Nuova prenotazione: ${name}`,
       html: `
         <p>Nuova prenotazione ricevuta dal sito:</p>
