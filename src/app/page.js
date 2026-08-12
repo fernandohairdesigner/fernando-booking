@@ -2,6 +2,8 @@ import { supabase } from '@/lib/supabaseClient'
 import Link from 'next/link'
 import Image from 'next/image'
 
+export const dynamic = 'force-dynamic'
+
 export default async function Home() {
   const { data: services } = await supabase
     .from('services')
@@ -12,7 +14,7 @@ export default async function Home() {
   return (
     <main className="bg-espresso text-avorio">
       {/* Hero */}
-      <section className="relative h-screen min-h-170 flex items-end overflow-hidden">
+      <section className="relative h-screen min-h-[680px] flex items-end overflow-hidden">
         <Image
           src="https://images.unsplash.com/photo-1521590832167-7bcbfaa6381f?q=80&w=2000&auto=format&fit=crop"
           alt="Interno del salone"
@@ -20,7 +22,7 @@ export default async function Home() {
           priority
           className="object-cover"
         />
-        <div className="absolute inset-0 bg-linear-to-t from-espresso via-espresso/60 to-espresso/20" />
+        <div className="absolute inset-0 bg-gradient-to-t from-espresso via-espresso/60 to-espresso/20" />
         <div className="absolute inset-0 bg-espresso/20" />
 
         <div className="relative z-10 px-6 md:px-12 pb-20 md:pb-28 w-full">
@@ -69,7 +71,7 @@ export default async function Home() {
       {/* Filosofia */}
       <section id="filosofia" className="px-6 md:px-12 py-24 md:py-36">
         <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-12 md:gap-20 items-center">
-          <div className="relative h-95 md:h-120 rounded-sm overflow-hidden order-2 md:order-1">
+          <div className="relative h-[380px] md:h-[480px] rounded-sm overflow-hidden order-2 md:order-1">
             <Image
               src="https://images.unsplash.com/photo-1633681926022-84c23e8cb2d6?q=80&w=1400&auto=format&fit=crop"
               alt="Dettaglio lavoro del salone"
@@ -169,7 +171,7 @@ export default async function Home() {
               Prenota ora
             </Link>
             <a
-             href="https://wa.me/390000000000"
+              href="https://wa.me/390000000000"
               target="_blank"
               rel="noopener noreferrer"
               className="border border-avorio/25 text-avorio/85 hover:border-bronzo-light hover:text-bronzo-light px-8 py-4 rounded-full font-body font-semibold tracking-wide transition-colors duration-300"
